@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { LESSONS } from '../content/catalog'
-import { DISCIPLINE_LABEL } from '../data/contest'
 import { AREAS, obligatorySyllabus } from '../data/syllabus'
 import { classifyQueue } from '../lib/srs'
 import { rankPriorities } from '../lib/priority'

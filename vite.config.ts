@@ -1,8 +1,10 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
+const pages = (globalThis as { process?: { env?: { PAGES?: string } } }).process?.env?.PAGES === 'true'
+
 export default defineConfig({
-  base: process.env.PAGES === 'true' ? '/genesis/' : '/',
+  base: pages ? '/genesis/' : '/',
   plugins: [react()],
   build: {
     rollupOptions: {
