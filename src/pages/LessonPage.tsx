@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { lessonById, neighboringLessons, questionsForLesson } from '../content/catalog'
 import { db, emptyProgress } from '../lib/db'
@@ -9,6 +9,8 @@ import { uid } from '../lib/id'
 import { DISCIPLINE_LABEL } from '../data/contest'
 import { AREAS } from '../data/syllabus'
 import { EVIDENCE_LABEL, STATUS_LABEL } from '../ui/labels'
+import { StudyText } from '../components/StudyText'
+import { LessonChecklist, LessonNotes, lessonChecks, markAtPoint, useLessonDraft, useStudyMarks } from '../components/LessonStudy'
 
 export function LessonPage() {
   const { id } = useParams()
@@ -20,7 +22,12 @@ export function LessonPage() {
   const neighbors = neighboringLessons(lesson?.id ?? '')
   const [savedNote, setSavedNote] = useState('')
   const [openQ, setOpenQ] = useState<string | null>(related[0]?.id ?? null)
-  useEffect(() => { setOpenQ(related[0]?.id ?? null) }, [lesson?.id])
+  const [pending, setPending] = useState<{ quote: string; x: number; y: number } | null>(null)
+  const [hoverMark, setHoverMark] = useState<{ id: string; x: number; y: number } | null>(null)
+  const readRef = useRef<HTMLDivElement>(null)
+  const draft = useLessonDraft(saved, reload)
+  useStudyMarks(readRef, draft.highlights, `${lesson?.id ?? ''}:${openQ ?? ''}`)
+  useEffect(() => { setOpenQ(related[0]?.id ?? null); setPending(null) }, [lesson?.id])
 
   const sections = useMemo(() => {
     if (!lesson) return []
@@ -35,14 +42,37 @@ export function LessonPage() {
     return out
   }, [lesson])
 
+  const toc = useMemo(
+    () => [...sections.map((section) => ({ id: section.id, heading: section.heading })), { id: 'checklist-aula', heading: 'O que você entendeu' }],
+    [sections],
+  )
+  const [activeId, setActiveId] = useState(toc[0]?.id ?? '')
+
+  useEffect(() => {
+    const root = document.querySelector('.main')
+    if (!root || toc.length === 0) return
+    const onScroll = () => {
+      const line = root.getBoundingClientRect().top + 110
+      let current = toc[0].id
+      for (const item of toc) {
+        const el = document.getElementById(item.id)
+        if (el && el.getBoundingClientRect().top <= line) current = item.id
+      }
+      setActiveId(current)
+    }
+    onScroll()
+    root.addEventListener('scroll', onScroll, { passive: true })
+    return () => root.removeEventListener('scroll', onScroll)
+  }, [toc])
+
   if (!lesson || !profile) return <p>Lição não encontrada.</p>
+  const terms = [...lesson.glossary.map((item) => item.term), ...lesson.definitions.map((item) => item.term)]
   const currentLesson = lesson
   const currentProfile = profile
   const area = AREAS.find((item) => item.id === lesson.chapterId || item.id === lesson.areaId)
 
   async function persist(status = saved.status === 'nao_iniciada' ? 'em_estudo' : saved.status) {
-    await db.saveProgress({
-      ...saved,
+    await draft.commit({
       profileId: currentProfile.id,
       lessonId: currentLesson.id,
       status,
@@ -69,11 +99,10 @@ export function LessonPage() {
     <article>
       <div className="chips">
         <Link className="chip" to={`/trilha?disc=${lesson.disciplineId}`}>{DISCIPLINE_LABEL[lesson.disciplineId]}</Link>
-        {area && area.title !== DISCIPLINE_LABEL[lesson.disciplineId] ? <span className="chip">{area.title}</span> : null}
-        <span className="chip">{lesson.title}</span>
+        {area && area.title !== DISCIPLINE_LABEL[lesson.disciplineId] && area.title !== lesson.title ? <span className="chip">{area.title}</span> : null}
       </div>
       <header className="lesson-hero">
-        <p className="meta">{area?.title}</p>
+        {area && area.title !== lesson.title ? <p className="meta">{area.title}</p> : null}
         <h1>{lesson.title}</h1>
         <p>{lesson.objective}</p>
         <p>{lesson.importance}</p>
@@ -86,12 +115,51 @@ export function LessonPage() {
 
       <div className="lesson-shell">
         <div className="lesson-body">
+          <div
+            className="study-read"
+            ref={readRef}
+            onMouseMove={(event) => {
+              if (!readRef.current) return
+              const hit = markAtPoint(readRef.current, draft.highlights, event.clientX, event.clientY)
+              if (hit) {
+                setHoverMark(hit)
+                return
+              }
+              if (!hoverMark) return
+              const dx = event.clientX - hoverMark.x
+              const dy = event.clientY - hoverMark.y
+              if (dx * dx + dy * dy > 48 * 48) setHoverMark(null)
+            }}
+            onMouseLeave={(event) => {
+              if ((event.relatedTarget as HTMLElement | null)?.closest?.('.mark-x')) return
+              setHoverMark(null)
+            }}
+            onMouseUp={() => {
+              const selection = window.getSelection()
+              const node = selection?.anchorNode
+              if (!selection || selection.isCollapsed || !node || !readRef.current?.contains(node)) {
+                setPending(null)
+                return
+              }
+              const quote = selection.toString().replace(/\s+/g, ' ').trim()
+              if (quote.length < 2) {
+                setPending(null)
+                return
+              }
+              const rect = selection.getRangeAt(0).getBoundingClientRect()
+              setPending({
+                quote,
+                x: Math.max(8, Math.min(rect.left, window.innerWidth - 168)),
+                y: rect.bottom + 8,
+              })
+            }}
+          >
           {lesson.prerequisites.length ? <p className="muted">Antes desta aula: {lesson.prerequisites.join('; ')}.</p> : null}
           {sections.map((section, index) => (
             <section key={section.id} id={section.id} className="section-card">
               <h3><span className="sec-n">{index + 1}</span>{section.heading}</h3>
               <div className="sec-body">
-                {section.paragraphs.map((p) => <p key={p.slice(0, 48)}>{p}</p>)}
+                {section.paragraphs.map((p) => <p key={p.slice(0, 48)}><StudyText text={p} terms={terms} /></p>)}
               </div>
             </section>
           ))}
@@ -119,11 +187,11 @@ export function LessonPage() {
                 <div className="compare-grid">
                   <article className="compare-card">
                     <h3>{table.leftLabel}</h3>
-                    <ul>{table.rows.map((row) => <li key={row.label}><strong>{row.label}.</strong> {row.left}</li>)}</ul>
+                    <ul>{table.rows.map((row) => <li key={row.label}><strong>{row.label}.</strong> <StudyText text={row.left} terms={terms} /></li>)}</ul>
                   </article>
                   <article className="compare-card">
                     <h3>{table.rightLabel}</h3>
-                    <ul>{table.rows.map((row) => <li key={row.label}><strong>{row.label}.</strong> {row.right}</li>)}</ul>
+                    <ul>{table.rows.map((row) => <li key={row.label}><strong>{row.label}.</strong> <StudyText text={row.right} terms={terms} /></li>)}</ul>
                   </article>
                 </div>
                 <div className="table-wrap" style={{ marginTop: '0.8rem' }}>
@@ -140,9 +208,9 @@ export function LessonPage() {
             <section key={example.title} className="section-card">
               <h3><span className="sec-n">▸</span>{example.title}</h3>
               <div className="sec-body">
-                <p>{example.setup}</p>
-                <ol>{example.steps.map((step) => <li key={step}>{step}</li>)}</ol>
-                <p><strong>Resultado.</strong> {example.result}</p>
+                <p><StudyText text={example.setup} terms={terms} /></p>
+                <ol>{example.steps.map((step) => <li key={step}><StudyText text={step} terms={terms} /></li>)}</ol>
+                <p><strong>Resultado.</strong> <StudyText text={example.result} terms={terms} /></p>
               </div>
             </section>
           ))}
@@ -151,8 +219,8 @@ export function LessonPage() {
             <section className="section-card">
               <h3><span className="sec-n">!</span>Como o enunciado esconde o conceito</h3>
               <div className="sec-body">
-                {lesson.examples.map((item) => <p key={item}>{item}</p>)}
-                {lesson.publicAdminExamples?.map((item) => <p key={item}>{item}</p>)}
+                {lesson.examples.map((item) => <p key={item}><StudyText text={item} terms={terms} /></p>)}
+                {lesson.publicAdminExamples?.map((item) => <p key={item}><StudyText text={item} terms={terms} /></p>)}
               </div>
             </section>
           ) : null}
@@ -160,7 +228,7 @@ export function LessonPage() {
           {lesson.procedures?.length ? (
             <section className="section-card">
               <h3><span className="sec-n">→</span>Passo a passo na hora da prova</h3>
-              <div className="sec-body"><ol>{lesson.procedures.map((item) => <li key={item}>{item}</li>)}</ol></div>
+              <div className="sec-body"><ol>{lesson.procedures.map((item) => <li key={item}><StudyText text={item} terms={terms} /></li>)}</ol></div>
             </section>
           ) : null}
 
@@ -169,8 +237,8 @@ export function LessonPage() {
               <h3><span className="sec-n">×</span>Erros que a alternativa errada provoca</h3>
               <div className="sec-body">
                 <ul>
-                  {lesson.commonErrors.map((item) => <li key={item}>{item}</li>)}
-                  {lesson.traps.map((item) => <li key={item}>{item}</li>)}
+                  {lesson.commonErrors.map((item) => <li key={item}><StudyText text={item} terms={terms} /></li>)}
+                  {lesson.traps.map((item) => <li key={item}><StudyText text={item} terms={terms} /></li>)}
                 </ul>
               </div>
             </section>
@@ -202,7 +270,7 @@ export function LessonPage() {
           <section className="section-card">
             <h3><span className="sec-n">=</span>Síntese</h3>
             <div className="sec-body">
-              <p>{lesson.synthesis}</p>
+              <p><StudyText text={lesson.synthesis} terms={terms} /></p>
               <ul>{lesson.masteryCriteria.map((item) => <li key={item}>{item}</li>)}</ul>
             </div>
           </section>
@@ -222,22 +290,22 @@ export function LessonPage() {
                 {opened ? (
                   <div className="sec-body">
                     {question.supportText ? <div className="support-text">{question.supportText}</div> : null}
-                    <p className="q-stem">{question.stem}</p>
+                    <p className="q-stem"><StudyText text={question.stem} terms={terms} /></p>
                     <div className="choices">
                       {question.choices.map((choice) => (
                         <div key={choice.id} className={choice.id === question.answerKey ? 'choice correct' : 'choice'} style={{ cursor: 'default' }}>
                           <span className="letter">{choice.id}</span>
-                          <span>{choice.text}</span>
+                          <span><StudyText text={choice.text} terms={terms} /></span>
                         </div>
                       ))}
                     </div>
                     <div className="ped-block feedback">
                       <p className="ped-kicker">Alternativa {question.answerKey} está correta porque</p>
-                      <p>{question.commentCorrect}</p>
+                      <p><StudyText text={question.commentCorrect} terms={terms} /></p>
                       <p className="ped-kicker">Por que as outras erram</p>
                       <ul className="why-list">
                         {question.choices.filter((c) => c.id !== question.answerKey).map((choice) => (
-                          <li key={choice.id}><strong>{choice.id}.</strong> {question.commentWrong[choice.id] ?? 'Não sustenta o comando.'}</li>
+                          <li key={choice.id}><strong>{choice.id}.</strong> <StudyText text={question.commentWrong[choice.id] ?? 'Não sustenta o comando.'} terms={terms} /></li>
                         ))}
                       </ul>
                       <p><strong>Como reconhecer uma parecida.</strong> {question.howToRecognize}</p>
@@ -248,6 +316,32 @@ export function LessonPage() {
             )
           })}
 
+          </div>
+          <LessonChecklist items={lessonChecks(lesson, sections)} checks={draft.checks} onToggle={draft.toggleCheck} />
+          <LessonNotes notes={draft.notes} onNotes={draft.setNotes} />
+          {hoverMark ? (
+            <button
+              className="mark-x"
+              type="button"
+              style={{ left: hoverMark.x, top: hoverMark.y }}
+              aria-label="Remover marcação"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => { draft.removeHighlight(hoverMark.id); setHoverMark(null) }}
+            >
+              ×
+            </button>
+          ) : null}
+          {pending ? (
+            <button
+              className="mark-pop"
+              type="button"
+              style={{ left: pending.x, top: pending.y }}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => { draft.addHighlight(pending.quote); setPending(null) }}
+            >
+              Marcar
+            </button>
+          ) : null}
           {savedNote ? <p className="notice ok">{savedNote}</p> : null}
           <div className="lesson-bar">
             {neighbors.prev ? <Link className="btn secondary" to={`/licoes/${neighbors.prev.id}`}>Anterior</Link> : null}
@@ -270,11 +364,24 @@ export function LessonPage() {
         </div>
         <aside className="lesson-toc">
           <p className="kicker">Nesta aula</p>
-          <ol>
-            {sections.map((section) => (
-              <li key={section.id}><button type="button" onClick={() => document.getElementById(section.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>{section.heading}</button></li>
-            ))}
-          </ol>
+          <p className="toc-where">{Math.max(1, toc.findIndex((item) => item.id === activeId) + 1)} de {toc.length}</p>
+          <nav>
+            {toc.map((item, index) => {
+              const state = item.id === activeId ? 'current' : index < toc.findIndex((entry) => entry.id === activeId) ? 'passed' : 'next'
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`toc-item ${state}`}
+                  aria-current={state === 'current' ? 'true' : undefined}
+                  onClick={() => document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                >
+                  <span className="toc-n">{state === 'passed' ? '✓' : index + 1}</span>
+                  <span className="toc-label">{item.heading}</span>
+                </button>
+              )
+            })}
+          </nav>
         </aside>
       </div>
     </article>

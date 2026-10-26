@@ -112,6 +112,58 @@ export function StrategiesPage() {
         </ul>
       </PedBlock>
 
+      <h2>Letras publicadas não preveem Itarema</h2>
+      <p>
+        Gabaritos de fora do acervo local, todos com quatro opções: Limoeiro do Norte 2016, após recursos (uma anulada, 39 válidas),
+        e Moraújo 2025, tipos A e B, no portal do IDIB. A letra mais frequente troca de prova para prova.
+        Isso é evidência contra o chute por frequência, não a favor.
+      </p>
+      <div className="table-wrap">
+        <table>
+          <thead><tr><th>Gabarito</th><th>A</th><th>B</th><th>C</th><th>D</th></tr></thead>
+          <tbody>
+            <tr><td>Limoeiro do Norte, 2016</td><td>10</td><td>10</td><td>10</td><td>9</td></tr>
+            <tr><td>Moraújo, 2025, tipo A</td><td>15</td><td>11</td><td>12</td><td>12</td></tr>
+            <tr><td>Moraújo, 2025, tipo B</td><td>12</td><td>15</td><td>11</td><td>12</td></tr>
+            <tr><td>Total, 139 válidas</td><td>37</td><td>36</td><td>33</td><td>33</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="muted">Os 280 itens locais continuam sem gabarito e não entram nessa tabela. Quatro opções não estimam A–E de Itarema. Alternar letra, evitar repetir ou equilibrar a folha não tem apoio nessa amostra.</p>
+
+      <h2>Quatro formatos da varredura de texto</h2>
+      <p className="muted">Contagem automática dos enunciados. As categorias se sobrepõem. Não é classificação humana definitiva.</p>
+      <div className="grid cols-2">
+        <article className="panel stat"><span className="muted">I, II, III e combinações</span><strong>40/280</strong><span className="muted">Julgar cada item e só então combinar.</span></article>
+        <article className="panel stat"><span className="muted">Incorreta, incorreto ou exceto</span><strong>17/280</strong><span className="muted">Busca literal. Com NÃO, a lição registra 24.</span></article>
+        <article className="panel stat"><span className="muted">Português com texto ou trecho</span><strong>30/79</strong><span className="muted">Achar o trecho que sustenta, sem extrapolar.</span></article>
+        <article className="panel stat"><span className="muted">Comando “Assinale”</span><strong>87/280</strong><span className="muted">O verbo vira a tarefa, não um ritual.</span></article>
+      </div>
+
+      <h2>Seis pegadinhas para treinar</h2>
+      <ol>
+        <li><strong>Pede a incorreta.</strong> Antes das letras: procurar a falsa.</li>
+        <li><strong>Uma palavra muda o alcance.</strong> Somente, exclusivamente, nunca, sempre, em qualquer hipótese. Não condene a frase só porque o termo é absoluto.</li>
+        <li><strong>Começa certa e termina errada.</strong> Leia até o fim. Todas as partes precisam sustentar.</li>
+        <li><strong>Afirmações independentes.</strong> Cada item é verdadeiro ou falso. Uma falsa derruba a combinação.</li>
+        <li><strong>O texto diz uma coisa e a alternativa amplia.</strong> “De acordo com o texto” exige o trecho.</li>
+        <li><strong>O assunto é conhecido, o comando pede outra operação.</strong> Classificar, comparar, calcular ou achar a exceção são tarefas diferentes.</li>
+      </ol>
+      <div className="table-wrap">
+        <table>
+          <thead><tr><th>Situação</th><th>Chance</th><th>Pontos esperados</th></tr></thead>
+          <tbody>
+            <tr><td>Chute em cinco</td><td>20%</td><td>{expectedValueNoPenalty(randomHitProbability(5)).toFixed(2)}</td></tr>
+            <tr><td>Restam quatro</td><td>25%</td><td>{expectedValueNoPenalty(randomHitProbability(4)).toFixed(2)}</td></tr>
+            <tr><td>Restam três</td><td>33%</td><td>{expectedValueNoPenalty(randomHitProbability(3)).toFixed(2)}</td></tr>
+            <tr><td>Restam duas</td><td>50%</td><td>{expectedValueNoPenalty(randomHitProbability(2)).toFixed(2)}</td></tr>
+            <tr><td>Em branco</td><td>0</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="muted">Peso 2,0 e erro sem desconto, item 13.9. O valor assume alternativas restantes igualmente prováveis. Nenhuma tela deste sistema indica uma letra.</p>
+      <p>CREMERJ 2019, Barreiras 2019, Jaguaribe 2020, Limoeiro 2016 e Petrolina 2019 distribuem Português, específicos e informática em pesos diferentes. Isso mostra que o peso muda de órgão. O edital de Itarema manda: específicos 24, português 14, raciocínio 6, informática 6. Lei 8.666 e a história de outro município não são ementa daqui.</p>
+
       <h2>3. Por disciplina — como o enunciado entra</h2>
       <p className="muted">Contagens sobre 280 itens A–D. Hipótese de transposição para 50×A–E de Itarema: não demonstrada.</p>
       {QUESTION_STRUCTURES.map((item) => (

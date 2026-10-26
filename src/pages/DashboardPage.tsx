@@ -93,7 +93,7 @@ export function DashboardPage() {
           <Link className="btn" to={overdue ? '/questoes?tab=revisoes' : '/simulados'}>{overdue ? 'Revisar' : 'Simular'}</Link>
         </article>
       </div>
-      <p className="meta" style={{ marginTop: '1.2rem' }}>{LESSONS.length} aulas no curso · <Link to="/plano">Abrir o plano até a prova</Link></p>
+      <p className="muted" style={{ marginTop: '1.2rem' }}>{LESSONS.length} aulas no curso · <Link to="/plano">Abrir o plano até a prova</Link></p>
     </section>
   )
 }

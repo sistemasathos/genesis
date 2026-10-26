@@ -6,6 +6,8 @@ import { scheduleReview } from '../lib/srs'
 import { uid } from '../lib/id'
 import { useStore } from '../state/store'
 import { lessonById } from '../content/catalog'
+import { commandTask } from '../lib/command'
+import { StudyText } from './StudyText'
 
 interface Props {
   questions: Question[]
@@ -142,7 +144,8 @@ export function QuestionPlayer({
       </div>
       <article className="q-card">
         {question.supportText ? <div className="support-text">{question.supportText}</div> : null}
-        <p className="q-stem">{question.stem}</p>
+        <p className="q-stem"><StudyText text={question.stem} terms={[...(lessonById(question.lessonId ?? '')?.glossary ?? []), ...(lessonById(question.lessonId ?? '')?.definitions ?? [])].map((item) => item.term)} /></p>
+        {commandTask(question.stem) ? <p className="notice info">{commandTask(question.stem)}</p> : null}
         <p className="meta">{question.origin === 'inedita' ? 'Questão inédita da plataforma, não é item oficial do IDIB.' : `Origem: ${question.origin}`}</p>
         <div className="choices">
           {question.choices.map((choice) => {
@@ -152,7 +155,7 @@ export function QuestionPlayer({
             return (
               <button key={choice.id} className={cls} type="button" onClick={() => void submit(choice.id)} disabled={shown}>
                 <span className="letter" aria-hidden="true">{choice.id}</span>
-                <span>{choice.text}</span>
+                <span><StudyText text={choice.text} terms={[...(lessonById(question.lessonId ?? '')?.glossary ?? []), ...(lessonById(question.lessonId ?? '')?.definitions ?? [])].map((item) => item.term)} /></span>
               </button>
             )
           })}
@@ -169,13 +172,16 @@ export function QuestionPlayer({
             </select>
           </label>
           <label>
-            Se errar, o tipo
+            Se errar, o motivo
             <select value={errorKind} onChange={(e) => setErrorKind(e.target.value as ErrorKind)}>
-              <option value="nao_classificado">Não classificar</option>
-              <option value="interpretacao">Interpretação</option>
-              <option value="desconhecimento">Desconhecimento</option>
+              <option value="nao_classificado">Ainda não sei</option>
+              <option value="comando">Li o comando errado</option>
+              <option value="conceito_proximo">Confundi conceitos próximos</option>
+              <option value="desconhecimento">Não sabia a regra</option>
+              <option value="calculo">Errei o cálculo</option>
+              <option value="eliminacao">Eliminei mal</option>
+              <option value="interpretacao">Interpretei o texto além do trecho</option>
               <option value="distracao">Distração</option>
-              <option value="calculo">Cálculo</option>
             </select>
           </label>
         </div>

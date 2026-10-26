@@ -82,6 +82,7 @@ export const estrategiasLessons: Lesson[] = [
     essencial: blocks('Cinco alternativas, uma correta, peso 2,0. Chute aleatório: P=1/5, valor esperado = 0,40 ponto. Eliminou 2: P=1/3, esperado ≈ 0,67. Eliminou 3: P=1/2, esperado = 1,0. Não existe “letra que mais cai” calculada neste acervo: os 8 PDFs locais não trazem gabarito.'),
     completo: [
       named('Política', 'Se você consegue eliminar ao menos uma com fundamento, responda. Se está entre duas, marque, siga, volte nos últimos 20 minutos. Não gaste 8 minutos numa questão de 2 pontos se ainda há 15 em branco.'),
+      named('Amostra de letras, contra o chute por frequência', 'Gabaritos publicados de quatro opções: Limoeiro do Norte 2016, 10/10/10/9 após uma anulação; Moraújo 2025 tipo A, 15/11/12/12; tipo B, 12/15/11/12. Total 37/36/33/33 em 139 respostas válidas. A letra mais frequente troca de prova. Não há base para A–E de Itarema. Os 280 itens locais não têm gabarito e não entram nessa conta. Branco vale 0. Cinco letras restantes valem, em média, 0,40; quatro, 0,50; três, 0,67; duas, 1,00; a certa, 2,00.'),
     ],
     aprofundamento: blocks('Superstição de gabarito (não marcar três iguais, seguir sequência) não tem base nesta amostra e pode induzir troca da certa pela errada. Calibre confiança: se você marca 5 e erra sempre, sua leitura do comando está falha.'),
     revisaoRapida: blocks('Sem penalidade → não deixe branco por medo. Elimine com motivo. Volte no fim. Nada de letra mágica.'),

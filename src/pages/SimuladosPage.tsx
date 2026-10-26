@@ -10,6 +10,13 @@ import { useStore } from '../state/store'
 import type { DisciplineId, SimuladoMode } from '../models/types'
 import { PageHeader } from '../components/PageHeader'
 
+function when(iso?: string): string {
+  if (!iso) return '—'
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 const MODES: { id: SimuladoMode; label: string }[] = [
   { id: 'completo', label: 'Completo (edital)' },
   { id: 'disciplina', label: 'Por disciplina' },
@@ -89,9 +96,10 @@ export function SimuladosPage() {
     <section>
       <PageHeader title="Simulados" lede="O simulado completo replica 14-6-6-24, 50 questões, peso 2,0, 4 horas e corte de 50% por disciplina. Sem gabarito durante a prova." />
       {interrupted ? (
-        <p className="notice warn">
-          Há um simulado interrompido ({interrupted.title}). <button className="btn" type="button" onClick={() => navigate(`/simulados/${interrupted.id}`)}>Retomar</button>
-        </p>
+        <div className="notice warn resume">
+          <p>Há um simulado interrompido: {interrupted.title}.</p>
+          <button className="btn" type="button" onClick={() => navigate(`/simulados/${interrupted.id}`)}>Retomar</button>
+        </div>
       ) : null}
       <div className="grid cols-2">
         <label>
@@ -115,7 +123,7 @@ export function SimuladosPage() {
           </label>
         ) : null}
       </div>
-      <button className="btn" type="button" onClick={() => void start()}>Iniciar</button>
+      <button className="btn" type="button" style={{ marginTop: '0.9rem' }} onClick={() => void start()}>Iniciar</button>
       <h2>Histórico</h2>
       <div className="table-wrap">
       <table>
@@ -123,7 +131,7 @@ export function SimuladosPage() {
         <tbody>
           {simulados.filter((s) => s.result).map((item) => (
             <tr key={item.id}>
-              <td>{item.finishedAt}</td>
+              <td>{when(item.finishedAt)}</td>
               <td><Link to={`/simulados/${item.id}`}>{item.title}</Link></td>
               <td>{item.result?.officialPoints}/{item.result?.officialMax}</td>
               <td>{item.result?.rawPercent.toFixed(0)}%</td>

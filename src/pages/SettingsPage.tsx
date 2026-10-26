@@ -69,28 +69,46 @@ export function SettingsPage() {
           <input value={draft.preferredHours} onChange={(e) => setDraft({ ...draft, preferredHours: e.target.value })} />
         </div>
       </div>
-      <p>Dias disponíveis</p>
-      <div className="row">
-        {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((label, day) => (
-          <button key={label} className={draft.weekdays.includes(day) ? 'btn' : 'btn secondary'} type="button" onClick={() => toggleDay(day)}>{label}</button>
-        ))}
+      <div className="field">
+        <span className="field-label">Dias disponíveis</span>
+        <div className="day-row">
+          {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((label, day) => (
+            <button key={label} className={draft.weekdays.includes(day) ? 'btn' : 'btn secondary'} type="button" onClick={() => toggleDay(day)}>{label}</button>
+          ))}
+        </div>
       </div>
-      <h2>Revisão espaçada</h2>
-      <div className="grid cols-2">
-        <label>Reset após erro (dias)<input type="number" value={draft.srs.errorResetDays} onChange={(e) => setDraft({ ...draft, srs: { ...draft.srs, errorResetDays: Number(e.target.value) } })} /></label>
-        <label>Baixa confiança (dias)<input type="number" value={draft.srs.lowConfidenceDays} onChange={(e) => setDraft({ ...draft, srs: { ...draft.srs, lowConfidenceDays: Number(e.target.value) } })} /></label>
-      </div>
-      <h2>Interface</h2>
-      <label><input type="checkbox" checked={draft.showExplanationsDuringPractice} onChange={(e) => setDraft({ ...draft, showExplanationsDuringPractice: e.target.checked })} /> Mostrar comentário no treino</label>
-      <label><input type="checkbox" checked={draft.showTimer} onChange={(e) => setDraft({ ...draft, showTimer: e.target.checked })} /> Cronômetro</label>
-      <label><input type="checkbox" checked={draft.highContrast} onChange={(e) => setDraft({ ...draft, highContrast: e.target.checked })} /> Contraste alto</label>
-      <label>Tamanho da fonte <input type="number" step="0.05" min="0.9" max="1.4" value={draft.fontScale} onChange={(e) => setDraft({ ...draft, fontScale: Number(e.target.value) })} /></label>
-      <label>Tema
-        <select value={draft.theme === 'sepia' ? 'claro' : draft.theme} onChange={(e) => setDraft({ ...draft, theme: e.target.value as 'claro' | 'escuro' })}>
-          <option value="claro">Claro</option>
-          <option value="escuro">Escuro</option>
-        </select>
-      </label>
+      <article className="card settings-block">
+        <h2>Revisão espaçada</h2>
+        <div className="grid cols-2">
+          <div className="field">
+            <label>Reset após erro (dias)</label>
+            <input type="number" value={draft.srs.errorResetDays} onChange={(e) => setDraft({ ...draft, srs: { ...draft.srs, errorResetDays: Number(e.target.value) } })} />
+          </div>
+          <div className="field">
+            <label>Baixa confiança (dias)</label>
+            <input type="number" value={draft.srs.lowConfidenceDays} onChange={(e) => setDraft({ ...draft, srs: { ...draft.srs, lowConfidenceDays: Number(e.target.value) } })} />
+          </div>
+        </div>
+      </article>
+      <article className="card settings-block">
+        <h2>Interface</h2>
+        <label className="check"><input type="checkbox" checked={draft.showExplanationsDuringPractice} onChange={(e) => setDraft({ ...draft, showExplanationsDuringPractice: e.target.checked })} /> Mostrar comentário no treino</label>
+        <label className="check"><input type="checkbox" checked={draft.showTimer} onChange={(e) => setDraft({ ...draft, showTimer: e.target.checked })} /> Cronômetro</label>
+        <label className="check"><input type="checkbox" checked={draft.highContrast} onChange={(e) => setDraft({ ...draft, highContrast: e.target.checked })} /> Contraste alto</label>
+        <div className="grid cols-2">
+          <div className="field">
+            <label>Tamanho da fonte</label>
+            <input type="number" step="0.05" min="0.9" max="1.4" value={draft.fontScale} onChange={(e) => setDraft({ ...draft, fontScale: Number(e.target.value) })} />
+          </div>
+          <div className="field">
+            <label>Tema</label>
+            <select value={draft.theme === 'sepia' ? 'claro' : draft.theme} onChange={(e) => setDraft({ ...draft, theme: e.target.value as 'claro' | 'escuro' })}>
+              <option value="claro">Claro</option>
+              <option value="escuro">Escuro</option>
+            </select>
+          </div>
+        </div>
+      </article>
       <div className="row" style={{ marginTop: '1rem' }}>
         <button className="btn" type="button" onClick={() => void save()}>Salvar</button>
         <button className="btn secondary" type="button" onClick={async () => { const next = defaultSettings(profileId); setDraft(next); await db.saveSettings(next); await reload() }}>Restaurar padrões</button>

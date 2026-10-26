@@ -76,53 +76,42 @@ export function FlashcardsPage() {
     <section>
       <h1>Flashcards</h1>
       <p className="lede">{decks.reduce((n, d) => n + d.cards.length, 0)} cartões reais, um baralho por aula. Nada além do glossário, das definições e dos prompts já escritos.</p>
-      <div className="grid cols-3" style={{ marginBottom: '1.2rem' }}>
-        {decks.slice(0, 12).map((item, i) => (
+      <div className="flash-layout">
+      <div className="deck-grid">
+        {decks.map((item, i) => (
           <button
             key={item.lesson.id}
             type="button"
-            className={`deck-card c${i % 6}`}
+            className={`deck-card c${i % 6}${item.lesson.id === lessonId ? ' on' : ''}`}
             onClick={() => { setLessonId(item.lesson.id); setIndex(0); setFlipped(false) }}
           >
-            <span className="pill">{item.cards.length} cartões</span>
+            <span className="pill">{item.cards.length} {item.cards.length === 1 ? 'cartão' : 'cartões'}</span>
             <strong>{item.lesson.title}</strong>
-            <span>{item.cards.length} cartões</span>
-            <span className="meta" style={{ color: 'inherit' }}>{DISCIPLINE_LABEL[item.lesson.disciplineId]}</span>
+            <span className="disc">{DISCIPLINE_LABEL[item.lesson.disciplineId]}</span>
           </button>
         ))}
       </div>
-      <div className="field">
-        <label htmlFor="deck">Aula</label>
-        <select
-          id="deck"
-          value={lessonId}
-          onChange={(e) => {
-            setLessonId(e.target.value)
-            setIndex(0)
-            setFlipped(false)
-          }}
-        >
-          {decks.map((item) => (
-            <option key={item.lesson.id} value={item.lesson.id}>
-              {DISCIPLINE_LABEL[item.lesson.disciplineId]} · {item.lesson.title} ({item.cards.length})
-            </option>
-          ))}
-        </select>
-      </div>
-      <p className="meta">{index + 1} / {deck.cards.length}{lesson ? <> · <Link to={`/licoes/${lesson.id}`}>{lesson.title}</Link></> : null}</p>
-      <button className="card flash-card" type="button" onClick={() => setFlipped((v) => !v)}>
-        <div>
-          <p className="kicker">{flipped ? 'Verso' : 'Frente'}</p>
-          <p style={{ margin: 0 }}>{flipped ? card.back : card.front}</p>
-          <p className="meta">Toque para virar</p>
+      <article className="card flash-stage">
+        <div className="row" style={{ justifyContent: 'space-between' }}>
+          <strong>{lesson?.title}</strong>
+          <span className="pill">{index + 1} de {deck.cards.length}</span>
         </div>
-      </button>
-      <div className="row" style={{ marginTop: '0.9rem' }}>
-        <button className="btn danger" type="button" onClick={() => void mark('nao_lembrei')}>Não lembrei</button>
-        <button className="btn secondary" type="button" onClick={() => void mark('parcial')}>Parcial</button>
-        <button className="btn" type="button" onClick={() => void mark('compreendi')}>Compreendi</button>
+        <button className="flash-card" type="button" onClick={() => setFlipped((v) => !v)}>
+          <div>
+            <p className="kicker">{flipped ? 'Verso' : 'Frente'}</p>
+            <p className="flash-face">{flipped ? card.back : card.front}</p>
+            <p className="muted">Toque para virar</p>
+          </div>
+        </button>
+        {lesson ? <p className="muted" style={{ margin: 0 }}><Link to={`/licoes/${lesson.id}`}>Abrir a aula</Link></p> : null}
+        <div className="flash-actions">
+          <button className="btn danger" type="button" onClick={() => void mark('nao_lembrei')}>Não lembrei</button>
+          <button className="btn secondary" type="button" onClick={() => void mark('parcial')}>Parcial</button>
+          <button className="btn" type="button" onClick={() => void mark('compreendi')}>Compreendi</button>
+        </div>
+        {note ? <p className="notice ok">{note}</p> : null}
+      </article>
       </div>
-      {note ? <p className="notice ok">{note}</p> : null}
     </section>
   )
 }

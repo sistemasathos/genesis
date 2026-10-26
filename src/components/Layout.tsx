@@ -56,6 +56,11 @@ export function Layout() {
   }, [skin])
 
   useEffect(() => {
+    setOpen(false)
+    setMore(false)
+  }, [location.pathname])
+
+  useEffect(() => {
     function onDoc(ev: MouseEvent) {
       if (!searchRef.current?.contains(ev.target as Node)) setFocused(false)
     }
@@ -71,29 +76,46 @@ export function Layout() {
 
   return (
     <div className={open ? 'app menu-open' : 'app'} data-skin={skin} data-contrast={settings.highContrast ? 'high' : 'normal'} style={{ ['--user-scale' as string]: String(settings.fontScale) }}>
+      {open ? <button className="nav-backdrop" type="button" aria-label="Fechar menu" onClick={() => setOpen(false)} /> : null}
       <aside className="nav" id="navegacao-principal">
-        <div className="brand" title="Genesis Itarema">G</div>
-        {RAIL.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            aria-label={item.label}
-            title={item.label}
-            className={({ isActive }) =>
-              isActive
-              || (item.to === '/trilha' && trailActive && !location.pathname.startsWith('/jornada'))
-              || (item.to === '/questoes' && practiceActive)
-                ? 'active'
-                : undefined
-            }
-            onClick={() => setOpen(false)}
-          >
-            <Icon name={item.icon} />
-          </NavLink>
-        ))}
+        <div className="nav-head">
+          <div className="brand" title="Genesis Itarema">G</div>
+          <button className="icon-btn drawer-close" type="button" aria-label="Fechar menu" onClick={() => setOpen(false)}>
+            <Icon name="close" size={16} />
+          </button>
+        </div>
+        <div className="nav-links">
+          {RAIL.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              aria-label={item.label}
+              title={item.label}
+              className={({ isActive }) =>
+                isActive
+                || (item.to === '/trilha' && trailActive && !location.pathname.startsWith('/jornada'))
+                || (item.to === '/questoes' && practiceActive)
+                  ? 'active'
+                  : undefined
+              }
+              onClick={() => setOpen(false)}
+            >
+              <Icon name={item.icon} />
+              <span className="drawer-label">{item.label}</span>
+            </NavLink>
+          ))}
+          <div className="drawer-extra">
+            {MORE.filter(([to]) => to !== '/configuracoes').map(([to, label, icon]) => (
+              <NavLink key={to} to={to} onClick={() => setOpen(false)}>
+                <Icon name={icon} />
+                <span className="drawer-label">{label}</span>
+              </NavLink>
+            ))}
+          </div>
+        </div>
         <div className="nav-foot">
-          <button className="nav-link" type="button" aria-label="Mais" title="Mais" onClick={() => setMore((v) => !v)}>
+          <button className="nav-link more-btn" type="button" aria-label="Mais" title="Mais" onClick={() => setMore((v) => !v)}>
             <Icon name="more" />
           </button>
           {more ? (
@@ -105,12 +127,16 @@ export function Layout() {
               ))}
             </div>
           ) : null}
+          <NavLink className="settings-link" to="/configuracoes" aria-label="Configurações" title="Configurações" onClick={() => setOpen(false)}>
+            <Icon name="settings" />
+            <span className="drawer-label">Configurações</span>
+          </NavLink>
         </div>
       </aside>
+      <div className="workspace">
       <header className="topbar">
-        <button className="btn secondary mobile-toggle" type="button" onClick={() => setOpen((v) => !v)}>Menu</button>
+        <button className="btn secondary mobile-toggle" type="button" onClick={() => setOpen((v) => !v)}>{open ? 'Fechar' : 'Menu'}</button>
         <div className="search-wrap" ref={searchRef}>
-          <span className="search-ico"><Icon name="search" size={16} /></span>
           <input
             type="search"
             placeholder="Buscar lição, questão, edital…"
@@ -139,7 +165,7 @@ export function Layout() {
           ) : null}
         </div>
         <div className="topbar-meta">
-          <span>{days} dias · {formatDateBR(settings.examDate)}</span>
+          <span className="exam-pill"><span>{days} dias</span><span className="exam-date"> · {formatDateBR(settings.examDate)}</span></span>
           <button className="icon-btn" type="button" aria-label="Alternar tema" onClick={() => void toggleTheme()}>
             <Icon name={skin === 'escuro' ? 'sun' : 'moon'} size={16} />
           </button>
@@ -151,6 +177,7 @@ export function Layout() {
       <main className="main">
         <Outlet />
       </main>
+      </div>
     </div>
   )
 }

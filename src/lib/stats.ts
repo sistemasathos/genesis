@@ -62,6 +62,9 @@ export function errorKinds(attempts: QuestionAttempt[]) {
   const total = wrong.length || 1
   const count = (kind: string) => wrong.filter((item) => (item.errorKind ?? 'nao_classificado') === kind).length
   return {
+    comando: count('comando') / total,
+    conceito_proximo: count('conceito_proximo') / total,
+    eliminacao: count('eliminacao') / total,
     interpretacao: count('interpretacao') / total,
     desconhecimento: count('desconhecimento') / total,
     distracao: count('distracao') / total,

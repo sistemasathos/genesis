@@ -20,7 +20,6 @@ export function PlanPage() {
 
   return (
     <section>
-      <p className="kicker">Plano até a prova</p>
       <h1>Plano até a prova</h1>
       <p className="lede">{days} dias · ritmo, horas e o que pesa mais no edital de Itarema.</p>
 
@@ -47,7 +46,7 @@ export function PlanPage() {
       </article>
 
       <h2>Seu próximo passo</h2>
-      <div className="grid cols-3">
+      <div className="plan-next">
         {next.map((item) => (
           <Link key={item.lessonId} className="card" to={`/licoes/${item.lessonId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <span className="ico-bubble" style={{ ['--disc' as string]: `var(--disc-${item.disciplineId === 'portugues' ? 'pt' : item.disciplineId === 'informatica' ? 'inf' : item.disciplineId === 'especificos' ? 'esp' : item.disciplineId === 'rlm' ? 'rlm' : 'est'})` }}>
@@ -66,7 +65,7 @@ export function PlanPage() {
           <tbody>
             {plan.map((item) => (
               <tr key={`${item.date}-${item.title}`}>
-                <td>{item.date}</td><td>{item.title}</td><td>{item.minutes}</td><td>{item.reason}</td>
+                <td>{formatDateBR(item.date)}</td><td>{item.title}</td><td>{item.minutes}</td><td>{item.reason}</td>
               </tr>
             ))}
           </tbody>

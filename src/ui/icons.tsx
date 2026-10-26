@@ -34,21 +34,29 @@ export function Icon({
   size = 20,
   ...rest
 }: { name: keyof typeof PATHS | string } & SVGProps<SVGSVGElement> & { size?: number }) {
-  const d = PATHS[name] ?? PATHS.book
+  const svg = {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true as const,
+    ...rest,
+  }
+  if (name === 'search') {
+    return (
+      <svg {...svg}>
+        <circle cx="11" cy="11" r="6.25" />
+        <path d="M16.2 16.2 20.5 20.5" />
+      </svg>
+    )
+  }
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...rest}
-    >
-      <path d={d} />
+    <svg {...svg}>
+      <path d={PATHS[name] ?? PATHS.book} />
     </svg>
   )
 }

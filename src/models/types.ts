@@ -33,10 +33,13 @@ export type RecallQuality = 'nao_lembrei' | 'parcial' | 'compreendi'
 export type ChoiceId = 'A' | 'B' | 'C' | 'D' | 'E'
 
 export type ErrorKind =
-  | 'interpretacao'
+  | 'comando'
+  | 'conceito_proximo'
   | 'desconhecimento'
-  | 'distracao'
   | 'calculo'
+  | 'eliminacao'
+  | 'interpretacao'
+  | 'distracao'
   | 'nao_classificado'
 
 export type LessonStatus = 'nao_iniciada' | 'em_estudo' | 'estudada' | 'revisada'
@@ -283,6 +286,11 @@ export interface SelectorWeights {
   coverageBalance: number
 }
 
+export interface TextMark {
+  id: string
+  quote: string
+}
+
 export interface LessonProgress {
   profileId: string
   lessonId: string
@@ -294,6 +302,9 @@ export interface LessonProgress {
   reviewedAt?: string
   secondsStudied: number
   selfRating?: RecallQuality
+  notes?: string
+  highlights?: TextMark[]
+  checks?: string[]
 }
 
 export interface QuestionAttempt {

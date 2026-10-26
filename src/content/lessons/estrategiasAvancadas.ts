@@ -81,6 +81,8 @@ export const estrategiasAvancadasLessons: Lesson[] = [
       named('Romanos', '39/280. Julgue I, II e III isoladamente. A alternativa é a combinação, não o conteúdo. 15 itens usam “Assinale se apenas a afirmativa…”; 12 usam “É correto o que se afirma”.'),
       named('Negativa', '24/280. prova8 concentra 8. A certa é o intruso. As quatro ou três restantes são verdadeiras e por isso atraentes.'),
       named('Texto', '18 stems citam TEXTO. prova3 tem texto longo mesmo sem o rótulo. A tipologia predominante não é o único gênero que aparece no texto.'),
+      named('Varredura de texto, categorias sobrepostas', 'Outra contagem, automática e sobreposta, não substitui as frações acima: I/II/III em 40/280; comando negativo literal (incorreta, incorreto ou exceto) em 17/280 — a lição já registra 24 quando entra o NÃO; Português com texto ou trecho em 30/79; “Assinale” em 87/280. Método: julgar item a item; comparar sujeito, alcance, condição, exceção e efeito; separar fato de conceito; resolver o par na ordem pedida.'),
+      named('Seis pegadinhas', 'Procurar a falsa. Conferir o absoluto sem condenar a frase só por isso. Ler até o fim. Verdadeiro ou falso por afirmação. Trecho que sustenta, sem extrapolar. O verbo do comando vira a tarefa. CREMERJ, Barreiras, Jaguaribe, Limoeiro e Petrolina só mostram que o peso muda de órgão. Itarema permanece 24/14/6/6. Lei 8.666 e a história de outro município não são ementa.'),
     ],
     aprofundamento: blocks(
       'Lei 8.666 em 13 stems antigos não autoriza estudá-la como vigente nem como linha do Anexo IV de Itarema. Use só para reconhecer o distrator histórico. Latinismos (8 itens) caem em específicos, não só em português.',

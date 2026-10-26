@@ -63,6 +63,22 @@ export function rankPriorities(params: {
         score += 10
         reasons.push('Ainda não há estatística confiável neste tópico.')
       }
+      const wrongKinds = relatedAttempts.filter((attempt) => attempt.correct === false).map((attempt) => attempt.errorKind)
+      const comando = wrongKinds.filter((kind) => kind === 'comando').length
+      const conceito = wrongKinds.filter((kind) => kind === 'conceito_proximo').length
+      const eliminacao = wrongKinds.filter((kind) => kind === 'eliminacao').length
+      if (comando >= 2) {
+        score += 16
+        reasons.push('Você acerta o conteúdo e erra o comando (EXCETO, incorreta, somente).')
+      }
+      if (conceito >= 2) {
+        score += 14
+        reasons.push('Erros por conceito próximo: compare o detalhe que muda a alternativa.')
+      }
+      if (eliminacao >= 2) {
+        score += 10
+        reasons.push('A eliminação está fraca: descarte só com motivo, e não deixe em branco.')
+      }
       return {
         syllabusId: item.id,
         lessonId: item.lessonId,

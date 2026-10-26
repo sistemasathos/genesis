@@ -6,6 +6,7 @@ import type {
   SelectorWeights,
   UserSettings,
 } from '../models/types'
+import { commandTask } from './command'
 import { daysUntil, todayISO } from './id'
 import { masteryFromAttempts } from './mastery'
 
@@ -52,7 +53,16 @@ function scoreQuestion(question: Question, ctx: SelectorContext, weights: Select
   const daysToExam = daysUntil(ctx.settings.examDate, today)
   const examProximity = daysToExam <= 14 ? weights.examProximity : daysToExam <= 30 ? weights.examProximity / 2 : 0
   const frequency = question.recurrenceNote ? weights.documentedFrequency : 0
-  return unseen + unstudied + err + marked + lowMastery + overdue + previousError + recency + difficultyFit + examProximity + frequency
+  const task = commandTask(question.stem)
+  const sameFormat = task
+    ? ctx.attempts.filter((attempt) => {
+      if (attempt.correct !== false) return false
+      if (attempt.errorKind !== 'comando' && attempt.errorKind !== 'conceito_proximo' && attempt.errorKind !== 'eliminacao') return false
+      const previous = ctx.questions.find((item) => item.id === attempt.questionId)
+      return previous ? commandTask(previous.stem) === task : false
+    }).length
+    : 0
+  return unseen + unstudied + err + marked + lowMastery + overdue + previousError + recency + difficultyFit + examProximity + frequency + Math.min(sameFormat, 3) * 8
 }
 
 export function selectQuestions(
