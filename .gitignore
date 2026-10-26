@@ -1,0 +1,7 @@
+node_modules
+dist
+.venv
+.DS_Store
+docs/fontes/*.pdf
+docs/fontes/*.gif
+docs/extracoes/*.txt
