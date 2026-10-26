@@ -100,7 +100,8 @@ p, li, td, th, h1, h2, h3 { overflow-wrap: break-word; }
 }
 .nav-head { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 .nav-links { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; align-items: center; gap: 0.35rem; width: 100%; }
-.drawer-label, .drawer-extra, .drawer-close, .nav-backdrop { display: none; }
+.drawer-label, .drawer-extra, .nav-backdrop { display: none; }
+.nav .drawer-close { display: none; }
 .workspace { margin-left: var(--nav); flex: 1; min-width: 0; height: 100%; min-height: 0; display: flex; flex-direction: column; }
 .brand {
   width: 2.4rem; height: 2.4rem; margin: 0 0 0.6rem;
@@ -256,12 +257,13 @@ th { color: var(--muted); font-size: var(--fs-meta); text-transform: uppercase; 
 .phase span { display: block; height: 100%; }
 .phase .a { background: #34d399; } .phase .b { background: #60a5fa; } .phase .c { background: #a78bfa; }
 
-.lesson-shell { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.2rem; align-items: start; }
+.lesson-hero { margin-bottom: 1.35rem; }
+.lesson-shell { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.2rem; align-items: start; margin-top: 0.35rem; }
 .lesson-body { max-width: none; font-size: 1.05rem; min-width: 0; }
 mark.cue { background: #eef2ff; color: inherit; border-radius: 4px; padding: 0 0.12em; font-weight: 750; }
 [data-skin='escuro'] mark.cue { background: #243056; }
 .lesson-toc {
-  position: sticky; top: 4.5rem; max-height: calc(100dvh - 6rem); overflow: auto;
+  position: sticky; top: 5.5rem; max-height: calc(100dvh - 7rem); overflow: auto;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.9rem;
 }
 .lesson-toc nav { display: grid; gap: 0.15rem; }
@@ -307,10 +309,17 @@ mark.cue { background: #eef2ff; color: inherit; border-radius: 4px; padding: 0 0
   width: 100%; min-height: 7.5rem; resize: vertical; border-radius: 14px; border: 1px solid var(--line);
   background: var(--surface-2); padding: 0.75rem 0.85rem; font-weight: 500;
 }
-.check-group { border: 0; margin: 0.85rem 0 0; padding: 0; }
-.check-group legend { font-weight: 800; margin-bottom: 0.25rem; }
-.study-check .progress { margin: 0.35rem 0 0.2rem; }
-.study-check .check { align-items: flex-start; }
+.goal-list { list-style: none; padding: 0; margin: 0.55rem 0 0; display: grid; gap: 0.45rem; }
+.goal { display: flex; gap: 0.65rem; align-items: flex-start; cursor: pointer; font-weight: 600; margin: 0; }
+.goal input { width: 1.05rem; height: 1.05rem; margin-top: 0.2rem; flex: none; }
+.goal.on span { text-decoration: line-through; color: var(--muted); font-weight: 500; }
+.recall-list { padding-left: 1.2rem; }
+.recall-list li { margin: 0 0 1rem; }
+.recall-list textarea {
+  width: 100%; margin: 0.4rem 0 0.5rem; min-height: 4.5rem; resize: vertical;
+  border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2); padding: 0.7rem 0.85rem;
+}
+.recall-key { background: var(--ok-bg); border-radius: 12px; padding: 0.7rem 0.85rem; }
 .ped-block { border: 1px solid var(--line); border-radius: 14px; padding: 0.85rem 1rem; margin: 0.8rem 0; background: var(--surface-2); }
 .ped-block .ped-kicker { font-size: var(--fs-meta); font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 0.35rem; }
 .ped-block.mistake, .ped-block.trap { background: var(--warn-bg); }
@@ -410,7 +419,7 @@ mark.cue { background: #eef2ff; color: inherit; border-radius: 4px; padding: 0 0
   .menu-open .nav-links, .menu-open .nav-foot, .menu-open .drawer-extra { align-items: stretch; }
   .menu-open .drawer-extra { display: flex; flex-direction: column; gap: 0.35rem; }
   .menu-open .drawer-label { display: inline; }
-  .menu-open .drawer-close { display: inline-flex; }
+  .menu-open .nav .drawer-close { display: inline-flex; }
   .menu-open .main { overflow: hidden; }
   .menu-open .nav a, .menu-open .nav button.nav-link, .menu-open .settings-link {
     width: auto; height: auto; display: flex; gap: 0.65rem; align-items: center; justify-content: flex-start;

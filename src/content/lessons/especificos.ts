@@ -152,6 +152,13 @@ export const especificosLessons: Lesson[] = [
       'Quando a autoexecutoriedade não existe?',
       'O protocolo do alvará já é o alvará? Por quê?',
     ],
+    recallAnswers: [
+      'COIFI: competência, objeto, forma, motivo e finalidade (o ato nasceu válido?). PATI: presunção, autoexecutoriedade, tipicidade e imperatividade (que poderes irradia?). Ex.: portaria de nomeação (COIFI) e multa com execução prevista em lei (PATI).',
+      'Motivo é o fato e a regra que justificam o ato; motivação é a exposição escrita desses pressupostos.',
+      'Ato ilegal não se revoga: anula-se, porque o vício nasceu com o ato. Revogação é só para ato legal que se tornou inconveniente.',
+      'Quando a lei não autoriza a Administração a executar pelos próprios meios — por exemplo, cobrar dívida em dinheiro, em regra, exige execução.',
+      'Não. O protocolo prova a entrada do pedido. O alvará é outro ato, da autoridade competente, depois do deferimento.',
+    ],
     commonErrors: [
       'Dizer que ato discricionário não precisa motivar.',
       'Confundir motivo (pressuposto) com motivação (exposição).',
@@ -213,6 +220,10 @@ export const especificosLessons: Lesson[] = [
       result: '“Solicita-se a Vossa Senhoria que anexe o comprovante ao processo n. … até 28/10/2026.”',
     }],
     recallPrompts: ['Vossa Excelência fala com quem, em uso protocolar usual?', 'Por que o verbo de Vossa Senhoria vai para a 3ª pessoa?'],
+    recallAnswers: [
+      'Autoridades de alto escalão (presidente, governador, prefeito, ministros, desembargadores, no uso protocolar usual).',
+      'O tratamento é de 3ª pessoa: “Vossa Senhoria encaminhe”, nunca “Vossa Senhoria encaminheis” nem “você”.',
+    ],
     publicAdminExamples: ['Ofício à Câmara pedindo informação; circular interna sobre horário de protocolo.'],
     commonErrors: ['Misturar eu/me em ofício.', 'Tratamento em 2ª pessoa.'],
     traps: ['Memorando para outro ente federativo (em muitos manuais, o instrumento externo é o ofício).'],
@@ -252,6 +263,10 @@ export const especificosLessons: Lesson[] = [
       result: 'A equação continua fechada. Caixa ≠ competência: se a compra fosse a prazo, o caixa não mexeria agora.',
     }],
     recallPrompts: ['O que acontece com o ativo quando se debita a conta Caixa?', 'Dê a diferença entre regime de caixa e de competência em uma frase.'],
+    recallAnswers: [
+      'Debitar Caixa aumenta o ativo: entra dinheiro. Creditar Caixa reduz o ativo: sai dinheiro.',
+      'Caixa registra quando o dinheiro entra ou sai; competência registra o fato gerador, mesmo sem movimento de caixa.',
+    ],
     publicAdminExamples: ['Controlar em planilha a caixa da tesouraria não substitui o empenho, mas o agente pode auxiliar conferência de documentos.'],
     commonErrors: ['Achar que debitar sempre piora a conta.'],
     traps: ['Confundir saldo devedor de caixa (normal) com “prejuízo”.'],
@@ -290,6 +305,10 @@ export const especificosLessons: Lesson[] = [
       result: 'Método segue a pergunta de recuperação. Protocolo rastreia; não autoriza jogar o original fora.',
     }],
     recallPrompts: ['Quais são as três idades do arquivo?', 'Por que digitalizar não autoriza, sozinho, eliminar o original?'],
+    recallAnswers: [
+      'Corrente, intermediário e permanente.',
+      'A eliminação depende da tabela de temporalidade. A cópia digital não substitui, sozinha, o original que ainda tem prazo de guarda.',
+    ],
     publicAdminExamples: ['Caixa-arquivo do ano corrente na secretaria; transferência ao arquivo central após a tabela de temporalidade.'],
     procedures: ['Receber e protocolar.', 'Classificar.', 'Arquivar pelo método da unidade.', 'Controlar empréstimo.', 'Aplicar temporalidade.'],
     commonErrors: ['Arquivar “onde couber” sem método.', 'Eliminar cópia e original sem tabela.'],

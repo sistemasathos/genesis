@@ -30,6 +30,11 @@ export const STATUS_LABEL: Record<LessonStatus, string> = {
   revisada: 'Em consolidação',
 }
 
+export function practiceLabel(status: LessonStatus, practiced: boolean): string {
+  if (status === 'estudada' && practiced) return 'Praticada'
+  return STATUS_LABEL[status]
+}
+
 export const MASTERY_LABEL: Record<MasteryLevel, string> = {
   insuficiente: 'Ainda sem evidência',
   em_construcao: 'Em construção',

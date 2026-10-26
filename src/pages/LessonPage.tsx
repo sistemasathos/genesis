@@ -1,33 +1,54 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { lessonById, neighboringLessons, questionsForLesson } from '../content/catalog'
 import { db, emptyProgress } from '../lib/db'
 import { scheduleReview } from '../lib/srs'
 import { useStore } from '../state/store'
-import type { RecallQuality } from '../models/types'
+import type { ChoiceId, RecallQuality } from '../models/types'
 import { uid } from '../lib/id'
 import { DISCIPLINE_LABEL } from '../data/contest'
 import { AREAS } from '../data/syllabus'
-import { EVIDENCE_LABEL, STATUS_LABEL } from '../ui/labels'
+import { EVIDENCE_LABEL, practiceLabel } from '../ui/labels'
 import { StudyText } from '../components/StudyText'
-import { LessonChecklist, LessonNotes, lessonChecks, markAtPoint, useLessonDraft, useStudyMarks } from '../components/LessonStudy'
+import { LessonChecklist, LessonNotes, lessonChecks, markAtPoint, occurrenceIndex, useLessonDraft, useStudyMarks } from '../components/LessonStudy'
 
 export function LessonPage() {
   const { id } = useParams()
-  const { profile, progress, settings, reload } = useStore()
+  const { profile, progress, settings, reload, attempts } = useStore()
+  const location = useLocation()
   const lesson = lessonById(id ?? '')
   const saved = progress.find((item) => item.lessonId === lesson?.id) ?? emptyProgress(profile?.id ?? '', lesson?.id ?? '')
   const [quality, setQuality] = useState<RecallQuality>('compreendi')
   const related = questionsForLesson(lesson?.id ?? '')
   const neighbors = neighboringLessons(lesson?.id ?? '')
   const [savedNote, setSavedNote] = useState('')
-  const [openQ, setOpenQ] = useState<string | null>(related[0]?.id ?? null)
-  const [pending, setPending] = useState<{ quote: string; x: number; y: number } | null>(null)
+  const [openQ, setOpenQ] = useState<string | null>(null)
+  const [picked, setPicked] = useState<Partial<Record<string, ChoiceId>>>({})
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({})
+  const [pending, setPending] = useState<{ quote: string; index: number; x: number; y: number } | null>(null)
   const [hoverMark, setHoverMark] = useState<{ id: string; x: number; y: number } | null>(null)
   const readRef = useRef<HTMLDivElement>(null)
   const draft = useLessonDraft(saved, reload)
   useStudyMarks(readRef, draft.highlights, `${lesson?.id ?? ''}:${openQ ?? ''}`)
-  useEffect(() => { setOpenQ(related[0]?.id ?? null); setPending(null) }, [lesson?.id])
+  useEffect(() => {
+    const next: Partial<Record<string, ChoiceId>> = {}
+    for (const question of related) {
+      const last = [...attempts].reverse().find((item) => item.questionId === question.id && item.choiceId)
+      if (last?.choiceId) next[question.id] = last.choiceId
+    }
+    setPicked(next)
+    setOpenQ(null)
+    setPending(null)
+    setRevealed({})
+  }, [lesson?.id])
+
+  useEffect(() => {
+    if (location.hash !== '#questoes-da-aula') return
+    const handle = window.setTimeout(() => {
+      document.getElementById('questoes-da-aula')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+    return () => window.clearTimeout(handle)
+  }, [location.hash, lesson?.id])
 
   const sections = useMemo(() => {
     if (!lesson) return []
@@ -108,7 +129,7 @@ export function LessonPage() {
         <p>{lesson.importance}</p>
         <div className="row">
           <span className="pill">Aula completa{lesson.estimatedMinutes ? ` · ~${lesson.estimatedMinutes} min` : ''}</span>
-          <span className="pill">{STATUS_LABEL[saved.status]}</span>
+          <span className="pill">{practiceLabel(saved.status, related.some((question) => attempts.some((item) => item.questionId === question.id)))}</span>
           {lesson.complementary ? <span className="pill">Facultativo</span> : null}
         </div>
       </header>
@@ -146,9 +167,11 @@ export function LessonPage() {
                 setPending(null)
                 return
               }
-              const rect = selection.getRangeAt(0).getBoundingClientRect()
+              const range = selection.getRangeAt(0)
+              const rect = range.getBoundingClientRect()
               setPending({
                 quote,
+                index: occurrenceIndex(readRef.current, quote, range),
                 x: Math.max(8, Math.min(rect.left, window.innerWidth - 168)),
                 y: rect.bottom + 8,
               })
@@ -263,7 +286,33 @@ export function LessonPage() {
           {lesson.recallPrompts?.length ? (
             <section className="section-card">
               <h3><span className="sec-n">?</span>Feche o texto e responda</h3>
-              <div className="sec-body"><ol>{lesson.recallPrompts.map((item) => <li key={item}>{item}</li>)}</ol></div>
+              <div className="sec-body">
+                <ol className="recall-list">
+                  {lesson.recallPrompts.map((item, index) => {
+                    const key = String(index)
+                    const answer = lesson.recallAnswers?.[index]
+                    return (
+                      <li key={item}>
+                        <p>{item}</p>
+                        <textarea
+                          aria-label={`Sua resposta ${index + 1}`}
+                          rows={3}
+                          value={draft.recallDraft[key] ?? ''}
+                          onChange={(event) => draft.setRecallAnswer(key, event.target.value)}
+                          placeholder="Escreva aqui, sem olhar o texto."
+                        />
+                        {answer ? (
+                          revealed[key] ? (
+                            <p className="recall-key"><strong>Resposta.</strong> {answer}</p>
+                          ) : (
+                            <button className="btn secondary" type="button" onClick={() => setRevealed((prev) => ({ ...prev, [key]: true }))}>Ver resposta</button>
+                          )
+                        ) : null}
+                      </li>
+                    )
+                  })}
+                </ol>
+              </div>
             </section>
           ) : null}
 
@@ -275,41 +324,76 @@ export function LessonPage() {
             </div>
           </section>
 
-          <h2>Onde isso aparece — questões inéditas comentadas</h2>
-          <p className="muted">Itens escritos para esta plataforma, no formato A–E de Itarema. Não são questões oficiais do IDIB e não revelam gabarito de PDF.</p>
+          <h2 id="questoes-da-aula">Onde isso aparece — questões inéditas comentadas</h2>
+          <p className="muted">Mini-teste desta aula. Marque uma letra; o comentário só aparece depois. Não são itens oficiais do IDIB.</p>
           {related.length === 0 ? <p>Esta aula ainda não tem questão inédita vinculada.</p> : null}
           {related.map((question, index) => {
             const opened = openQ === question.id
+            const chosen = picked[question.id]
             return (
               <article key={question.id} className="acc-item">
                 <button type="button" className="module-line" style={{ width: '100%', background: 'none', border: 0, cursor: 'pointer', color: 'inherit' }} onClick={() => setOpenQ(opened ? null : question.id)}>
-                  <span className="mod-n on">Q{index + 1}</span>
+                  <span className={chosen ? 'mod-n on' : 'mod-n'}>Q{index + 1}</span>
                   <span style={{ textAlign: 'left' }}>{question.stem.slice(0, 110)}{question.stem.length > 110 ? '…' : ''}</span>
-                  <span className="pill">{opened ? 'Fechar' : 'Ver explicação'}</span>
+                  <span className="pill">{opened ? 'Fechar' : chosen ? 'Ver comentário' : 'Responder'}</span>
                 </button>
                 {opened ? (
                   <div className="sec-body">
                     {question.supportText ? <div className="support-text">{question.supportText}</div> : null}
                     <p className="q-stem"><StudyText text={question.stem} terms={terms} /></p>
                     <div className="choices">
-                      {question.choices.map((choice) => (
-                        <div key={choice.id} className={choice.id === question.answerKey ? 'choice correct' : 'choice'} style={{ cursor: 'default' }}>
-                          <span className="letter">{choice.id}</span>
-                          <span><StudyText text={choice.text} terms={terms} /></span>
-                        </div>
-                      ))}
+                      {question.choices.map((choice) => {
+                        let cls = 'choice'
+                        if (chosen === choice.id) cls += ' selected'
+                        if (chosen && question.answerKey === choice.id) cls += ' correct'
+                        if (chosen && chosen === choice.id && question.answerKey !== choice.id) cls += ' wrong'
+                        return (
+                          <button
+                            key={choice.id}
+                            className={cls}
+                            type="button"
+                            disabled={Boolean(chosen)}
+                            onClick={() => {
+                              if (chosen) return
+                              setPicked((prev) => ({ ...prev, [question.id]: choice.id }))
+                              void (async () => {
+                                await db.addAttempt({
+                                  id: uid('att'),
+                                  profileId: currentProfile.id,
+                                  questionId: question.id,
+                                  choiceId: choice.id,
+                                  correct: question.answerKey === choice.id,
+                                  elapsedMs: 0,
+                                  createdAt: new Date().toISOString(),
+                                  markedForReview: false,
+                                })
+                                await reload()
+                              })()
+                            }}
+                          >
+                            <span className="letter">{choice.id}</span>
+                            <span><StudyText text={choice.text} terms={terms} /></span>
+                          </button>
+                        )
+                      })}
                     </div>
-                    <div className="ped-block feedback">
-                      <p className="ped-kicker">Alternativa {question.answerKey} está correta porque</p>
-                      <p><StudyText text={question.commentCorrect} terms={terms} /></p>
-                      <p className="ped-kicker">Por que as outras erram</p>
-                      <ul className="why-list">
-                        {question.choices.filter((c) => c.id !== question.answerKey).map((choice) => (
-                          <li key={choice.id}><strong>{choice.id}.</strong> <StudyText text={question.commentWrong[choice.id] ?? 'Não sustenta o comando.'} terms={terms} /></li>
-                        ))}
-                      </ul>
-                      <p><strong>Como reconhecer uma parecida.</strong> {question.howToRecognize}</p>
-                    </div>
+                    {chosen ? (
+                      <div className={`ped-block ${chosen === question.answerKey ? 'feedback' : 'mistake'}`}>
+                        <p className="ped-kicker">
+                          {chosen === question.answerKey ? `Alternativa ${question.answerKey} está correta porque` : `A certa é ${question.answerKey} porque`}
+                        </p>
+                        <p><StudyText text={question.commentCorrect} terms={terms} /></p>
+                        <p className="ped-kicker">Por que as outras erram</p>
+                        <ul className="why-list">
+                          {question.choices.filter((c) => c.id !== question.answerKey).map((choice) => (
+                            <li key={choice.id}><strong>{choice.id}.</strong> <StudyText text={question.commentWrong[choice.id] ?? 'Não sustenta o comando.'} terms={terms} /></li>
+                          ))}
+                        </ul>
+                        <p><strong>Como reconhecer uma parecida.</strong> {question.howToRecognize}</p>
+                      </div>
+                    ) : (
+                      <p className="muted">Marque uma alternativa para ver o comentário.</p>
+                    )}
                   </div>
                 ) : null}
               </article>
@@ -317,7 +401,7 @@ export function LessonPage() {
           })}
 
           </div>
-          <LessonChecklist items={lessonChecks(lesson, sections)} checks={draft.checks} onToggle={draft.toggleCheck} />
+          <LessonChecklist items={lessonChecks(lesson)} checks={draft.checks} onToggle={draft.toggleCheck} />
           <LessonNotes notes={draft.notes} onNotes={draft.setNotes} />
           {hoverMark ? (
             <button
@@ -337,7 +421,7 @@ export function LessonPage() {
               type="button"
               style={{ left: pending.x, top: pending.y }}
               onMouseDown={(event) => event.preventDefault()}
-              onClick={() => { draft.addHighlight(pending.quote); setPending(null) }}
+              onClick={() => { draft.addHighlight(pending.quote, pending.index); setPending(null) }}
             >
               Marcar
             </button>

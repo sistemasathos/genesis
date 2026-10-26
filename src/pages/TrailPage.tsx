@@ -4,7 +4,7 @@ import { CONTEST, DISCIPLINE_LABEL } from '../data/contest'
 import { AREAS, SYLLABUS } from '../data/syllabus'
 import { useStore } from '../state/store'
 import { DISCIPLINE_ICON, Icon } from '../ui/icons'
-import { STATUS_LABEL } from '../ui/labels'
+import { practiceLabel } from '../ui/labels'
 import type { DisciplineId, LessonStatus } from '../models/types'
 
 const ORDER: DisciplineId[] = ['portugues', 'rlm', 'informatica', 'especificos', 'estrategias']
@@ -14,7 +14,7 @@ function statusOf(progress: { lessonId: string; status: LessonStatus }[], lesson
 }
 
 export function TrailPage() {
-  const { progress } = useStore()
+  const { progress, attempts } = useStore()
   const [params] = useSearchParams()
   const disc = (params.get('disc') as DisciplineId) || ''
   const current = ORDER.includes(disc) ? disc : ''
@@ -53,6 +53,12 @@ export function TrailPage() {
   const started = withLesson.filter((row) => statusOf(progress, row.lessonId) !== 'nao_iniciada').length
   const pct = withLesson.length ? Math.round((started / withLesson.length) * 100) : 0
   const bp = CONTEST.blueprint.distribution[current]
+  const practicedLessons = new Set(
+    attempts.flatMap((attempt) => {
+      const question = QUESTIONS.find((item) => item.id === attempt.questionId)
+      return question?.lessonId ? [question.lessonId] : []
+    }),
+  )
 
   return (
     <section>
@@ -94,16 +100,23 @@ export function TrailPage() {
             {rows.map((item) => {
               const lesson = LESSONS.find((row) => row.id === item.lessonId)
               const st = statusOf(progress, item.lessonId)
+              const count = QUESTIONS.filter((question) => question.lessonId === item.lessonId).length
+              const practiced = practicedLessons.has(item.lessonId)
+              const pending = st === 'estudada' && count > 0 && !practiced
               return (
-                <Link key={item.id} className="module-line" to={lesson ? `/licoes/${lesson.id}` : '/trilha'} style={{ pointerEvents: lesson ? 'auto' : 'none' }}>
+                <div key={item.id} className="module-line">
                   <span className={st === 'nao_iniciada' ? 'mod-n' : 'mod-n on'}>{st === 'nao_iniciada' ? '○' : '●'}</span>
-                  <span>
+                  <Link to={lesson ? `/licoes/${lesson.id}` : '/trilha'} style={{ pointerEvents: lesson ? 'auto' : 'none', color: 'inherit', textDecoration: 'none' }}>
                     {item.title}
                     {item.complementary ? <span className="pill" style={{ marginLeft: 8 }}>Facultativo</span> : null}
-                    <div className="meta">{lesson ? STATUS_LABEL[st] : 'Sem aula — não conta como concluído'}</div>
-                  </span>
-                  <span className="muted">{lesson ? 'Abrir' : ''}</span>
-                </Link>
+                    <div className="meta">{lesson ? practiceLabel(st, practiced) : 'Sem aula — não conta como concluído'}</div>
+                  </Link>
+                  {pending && lesson ? (
+                    <Link className="btn secondary" to={`/licoes/${lesson.id}#questoes-da-aula`}>Praticar {count} questões</Link>
+                  ) : (
+                    <Link className="muted" to={lesson ? `/licoes/${lesson.id}` : '/trilha'} style={{ pointerEvents: lesson ? 'auto' : 'none', textDecoration: 'none' }}>{lesson ? 'Abrir' : ''}</Link>
+                  )}
+                </div>
               )
             })}
           </article>

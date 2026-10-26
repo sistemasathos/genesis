@@ -56,6 +56,10 @@ export const estrategiasAvancadasLessons: Lesson[] = [
       level: 'observado',
     }],
     recallPrompts: ['Quais são as sete etapas, em ordem?', 'O que muda se o comando for EXCETO?'],
+    recallAnswers: [
+      'Tarefa, conhecimento, dados, estratégia, execução, verificação e armadilhas.',
+      'A pergunta vira “qual é a falsa?”. A frase verdadeira deixa de ser o gabarito e vira distrator.',
+    ],
     commonErrors: ['Ler alternativas antes do comando.', 'Tratar o enredo como se fosse a regra.'],
     traps: ['Alternativa certa para outra pergunta.'],
     relatedLessonIds: ['est-comando', 'est-estruturas'],
@@ -104,6 +108,10 @@ export const estrategiasAvancadasLessons: Lesson[] = [
       },
     ],
     recallPrompts: ['Quantos itens do corpus local usam romanos?', 'Por que 8.666 no caderno antigo não vira matéria de Itarema?'],
+    recallAnswers: [
+      '39 das 280 questões extraídas.',
+      'A lei foi revogada pela 14.133/2021 e não está no Anexo IV deste cargo. O caderno antigo descreve outro órgão e outro programa.',
+    ],
     commonErrors: ['Transformar 39/280 em “a banca sempre cobra assim”.', 'Estudar 8.666 como se vigente.'],
     traps: ['Tratar o caderno do CRF-RJ como programa municipal de Itarema.'],
     relatedLessonIds: ['est-anatomia', 'est-literal-aplicada'],
@@ -148,6 +156,9 @@ export const estrategiasAvancadasLessons: Lesson[] = [
       result: 'Quem só memorizou a lista marca “todo ato é autoexecutório” e erra a aplicação.',
     }],
     recallPrompts: ['Dê um exemplo literal e um aplicado do mesmo conceito de atos.'],
+    recallAnswers: [
+      'Literal: listar PATI. Aplicado: “todo ato é autoexecutório” é falso, porque cobrar dívida em dinheiro, em regra, exige execução.',
+    ],
     commonErrors: ['Chamar de pegadinha o item que só exigia o limite da regra.'],
     traps: ['Alternativa com a lista certa e um “sempre” indevido.'],
     relatedLessonIds: ['esp-atos', 'est-por-disciplina'],

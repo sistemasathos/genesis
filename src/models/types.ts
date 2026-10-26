@@ -154,6 +154,7 @@ export interface Lesson {
   workedExamples?: WorkedExample[]
   examInsights?: ExamInsight[]
   recallPrompts?: string[]
+  recallAnswers?: string[]
   estimatedMinutes?: number
   relatedLessonIds: string[]
   relatedEditalItems: string[]
@@ -289,6 +290,7 @@ export interface SelectorWeights {
 export interface TextMark {
   id: string
   quote: string
+  index?: number
 }
 
 export interface LessonProgress {
@@ -305,6 +307,7 @@ export interface LessonProgress {
   notes?: string
   highlights?: TextMark[]
   checks?: string[]
+  recallDraft?: Record<string, string>
 }
 
 export interface QuestionAttempt {

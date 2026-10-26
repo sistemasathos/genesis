@@ -9,44 +9,31 @@ export interface CheckItem {
   label: string
 }
 
-export function lessonChecks(
-  lesson: Lesson,
-  sections: { id: string; heading: string }[],
-): CheckItem[] {
-  const items: CheckItem[] = []
-  for (const section of sections) items.push({ id: `sec:${section.id}`, group: 'Trechos da aula', label: section.heading })
-  for (const item of lesson.definitions) items.push({ id: `def:${item.term}`, group: 'Definições', label: item.term })
-  for (const table of lesson.comparisons ?? []) items.push({ id: `cmp:${table.title}`, group: 'Comparações', label: table.title })
-  for (const example of lesson.workedExamples ?? []) items.push({ id: `work:${example.title}`, group: 'Exemplos resolvidos', label: example.title })
-  if (lesson.examples.length) items.push({ id: 'hide:examples', group: 'Leitura de prova', label: 'Como o enunciado esconde o conceito' })
-  for (const [index, item] of (lesson.procedures ?? []).entries()) items.push({ id: `proc:${index}`, group: 'Passo a passo', label: item })
-  for (const [index, item] of lesson.commonErrors.entries()) items.push({ id: `err:${index}`, group: 'Erros para reconhecer', label: item })
-  for (const [index, item] of lesson.traps.entries()) items.push({ id: `trap:${index}`, group: 'Erros para reconhecer', label: item })
-  const defined = new Set(lesson.definitions.map((item) => item.term))
-  for (const item of lesson.glossary) {
-    if (!defined.has(item.term)) items.push({ id: `gloss:${item.term}`, group: 'Glossário', label: item.term })
-  }
-  for (const [index, item] of (lesson.recallPrompts ?? []).entries()) items.push({ id: `recall:${index}`, group: 'Feche o texto e responda', label: item })
-  items.push({ id: 'syn', group: 'Síntese', label: lesson.synthesis })
-  for (const [index, item] of lesson.masteryCriteria.entries()) items.push({ id: `master:${index}`, group: 'O que esta aula pede', label: item })
-  return items
+export function lessonChecks(lesson: Lesson): CheckItem[] {
+  return lesson.masteryCriteria.slice(0, 6).map((label, index) => ({
+    id: `master:${index}`,
+    group: 'Objetivos',
+    label,
+  }))
 }
 
 export function useLessonDraft(saved: LessonProgress, reload: () => Promise<void>) {
   const [notes, setNotes] = useState(saved.notes ?? '')
   const [highlights, setHighlights] = useState<TextMark[]>(saved.highlights ?? [])
   const [checks, setChecks] = useState<string[]>(saved.checks ?? [])
-  const draft = useRef({ notes, highlights, checks })
+  const [recallDraft, setRecallDraft] = useState<Record<string, string>>(saved.recallDraft ?? {})
+  const draft = useRef({ notes, highlights, checks, recallDraft })
   const record = useRef(saved)
   const queue = useRef(Promise.resolve())
   const skipNoteSave = useRef(true)
-  draft.current = { notes, highlights, checks }
+  draft.current = { notes, highlights, checks, recallDraft }
 
   useEffect(() => {
     record.current = saved
     setNotes(saved.notes ?? '')
     setHighlights(saved.highlights ?? [])
     setChecks(saved.checks ?? [])
+    setRecallDraft(saved.recallDraft ?? {})
     skipNoteSave.current = true
     // Só troca o rascunho ao mudar de aula. Um reload depois de gravar não pode apagar o que está sendo digitado.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,7 +50,7 @@ export function useLessonDraft(saved: LessonProgress, reload: () => Promise<void
       void commit()
     }, 450)
     return () => window.clearTimeout(handle)
-  }, [notes, saved.lessonId])
+  }, [notes, recallDraft, saved.lessonId])
 
   function commit(extra?: Partial<LessonProgress>) {
     const task = queue.current.then(async () => {
@@ -84,11 +71,11 @@ export function useLessonDraft(saved: LessonProgress, reload: () => Promise<void
     return task
   }
 
-  function addHighlight(quote: string) {
+  function addHighlight(quote: string, index = 0) {
     const clean = quote.replace(/\s+/g, ' ').trim().slice(0, 500)
     if (clean.length < 2) return
-    if (draft.current.highlights.some((item) => item.quote === clean)) return
-    const next = [...draft.current.highlights, { id: uid('mark'), quote: clean }]
+    if (draft.current.highlights.some((item) => item.quote === clean && (item.index ?? 0) === index)) return
+    const next = [...draft.current.highlights, { id: uid('mark'), quote: clean, index }]
     draft.current = { ...draft.current, highlights: next }
     setHighlights(next)
     void commit()
@@ -110,7 +97,13 @@ export function useLessonDraft(saved: LessonProgress, reload: () => Promise<void
     void commit()
   }
 
-  return { notes, setNotes, highlights, checks, addHighlight, removeHighlight, toggleCheck, commit }
+  function setRecallAnswer(key: string, value: string) {
+    const next = { ...draft.current.recallDraft, [key]: value }
+    draft.current = { ...draft.current, recallDraft: next }
+    setRecallDraft(next)
+  }
+
+  return { notes, setNotes, highlights, checks, recallDraft, addHighlight, removeHighlight, toggleCheck, setRecallAnswer, commit }
 }
 
 export function rangesForQuote(root: HTMLElement, quote: string): Range[] {
@@ -180,6 +173,23 @@ function locate(nodes: Text[], start: number, end: number): Range | null {
   return range
 }
 
+export function rangeForMark(root: HTMLElement, mark: TextMark): Range | undefined {
+  return rangesForQuote(root, mark.quote)[mark.index ?? 0]
+}
+
+export function occurrenceIndex(root: HTMLElement, quote: string, selected: Range): number {
+  const all = rangesForQuote(root, quote)
+  const found = all.findIndex((item) => {
+    try {
+      return item.compareBoundaryPoints(Range.START_TO_START, selected) <= 0
+        && item.compareBoundaryPoints(Range.END_TO_END, selected) >= 0
+    } catch {
+      return false
+    }
+  })
+  return found >= 0 ? found : 0
+}
+
 export function useStudyMarks(root: RefObject<HTMLElement | null>, highlights: TextMark[], revision: string) {
   useEffect(() => {
     const node = root.current
@@ -187,7 +197,7 @@ export function useStudyMarks(root: RefObject<HTMLElement | null>, highlights: T
     if (!node || !css.highlights) return
     const HighlightCtor = (globalThis as unknown as { Highlight?: new (...ranges: Range[]) => unknown }).Highlight
     if (!HighlightCtor) return
-    const ranges = highlights.flatMap((item) => rangesForQuote(node, item.quote))
+    const ranges = highlights.map((item) => rangeForMark(node, item)).filter((item): item is Range => Boolean(item))
     css.highlights.set('study-mark', new HighlightCtor(...ranges))
     return () => css.highlights?.delete('study-mark')
   }, [root, highlights, revision])
@@ -202,12 +212,11 @@ export function markAtPoint(
   const pos = caretFromPoint(x, y)
   if (!pos || !root.contains(pos.node)) return null
   for (const item of highlights) {
-    for (const range of rangesForQuote(root, item.quote)) {
-      if (!rangeContains(range, pos.node, pos.offset)) continue
-      const rect = [...range.getClientRects()].at(-1)
-      if (!rect) continue
-      return { id: item.id, x: rect.right, y: rect.top }
-    }
+    const range = rangeForMark(root, item)
+    if (!range || !rangeContains(range, pos.node, pos.offset)) continue
+    const rect = [...range.getClientRects()].at(-1)
+    if (!rect) continue
+    return { id: item.id, x: rect.right, y: rect.top }
   }
   return null
 }
@@ -258,24 +267,24 @@ export function LessonChecklist({
   onToggle: (id: string) => void
 }) {
   const done = items.filter((item) => checks.includes(item.id)).length
-  const groups = [...new Set(items.map((item) => item.group))]
   return (
     <section className="section-card study-check" id="checklist-aula">
       <h3><span className="sec-n">✓</span>O que você entendeu</h3>
       <div className="sec-body">
-        <p className="muted">{done} de {items.length} itens desta aula marcados como entendidos.</p>
-        <div className="progress" aria-hidden="true"><span style={{ width: `${items.length ? (done / items.length) * 100 : 0}%` }} /></div>
-        {groups.map((group) => (
-          <fieldset key={group} className="check-group">
-            <legend>{group}</legend>
-            {items.filter((item) => item.group === group).map((item) => (
-              <label key={item.id} className="check">
-                <input type="checkbox" checked={checks.includes(item.id)} onChange={() => onToggle(item.id)} />
-                <span>{item.label}</span>
-              </label>
-            ))}
-          </fieldset>
-        ))}
+        <p className="muted">{done} de {items.length} objetivos.</p>
+        <ul className="goal-list">
+          {items.map((item) => {
+            const on = checks.includes(item.id)
+            return (
+              <li key={item.id}>
+                <label className={on ? 'goal on' : 'goal'}>
+                  <input type="checkbox" checked={on} onChange={() => onToggle(item.id)} />
+                  <span>{item.label}</span>
+                </label>
+              </li>
+            )
+          })}
+        </ul>
       </div>
     </section>
   )
